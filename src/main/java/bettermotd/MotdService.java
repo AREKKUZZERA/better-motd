@@ -41,7 +41,7 @@ public final class MotdService {
         long now = System.currentTimeMillis();
 
         event.motd(buildMotd(preset, now));
-        event.setServerIcon(iconCache.pickIcon(preset, now));
+        event.setServerIcon(iconCache.pickIcon(preset));
     }
 
     @SuppressWarnings("deprecation")

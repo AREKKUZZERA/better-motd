@@ -19,10 +19,8 @@ No NMS. No performance overhead.
 
 - 🎨 Dynamic MOTD with **MiniMessage** support
 - 🌈 HEX colors, gradients, and formatting
-- 🔁 Animated MOTD (frame-based)
-- 🖼️ Server icon switching and animation
+- 🖼️ Server icon switching
 - 🎯 Weighted random or sticky-per-IP preset selection
-- 📁 Automatic `icons/` directory creation
 - 🧩 Default icon (`default.png`) generated on first startup
 - ⚡ Lightweight, async-safe implementation
 

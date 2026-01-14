@@ -8,7 +8,6 @@ import org.bukkit.util.CachedServerIcon;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,9 +19,6 @@ public final class IconCache {
     private final JavaPlugin plugin;
     private final Map<String, CachedServerIcon> cache = new ConcurrentHashMap<>();
 
-    private volatile boolean animEnabled = true;
-    private volatile long frameIntervalMs = 450L;
-
     private File iconsDir;
 
     public IconCache(JavaPlugin plugin) {
@@ -30,34 +26,32 @@ public final class IconCache {
     }
 
     public void reload(ConfigModel cfg) {
-        this.animEnabled = cfg.animationEnabled();
-        this.frameIntervalMs = cfg.frameIntervalMillis();
         cache.clear();
 
         ensureIconsDirectory();
         ensureDefaultIconIfNoPngs();
-        warnIfIconsEmpty(); // после попытки создать заглушку
+        warnIfIconsEmpty();
     }
 
     public void clear() {
         cache.clear();
     }
 
-    public CachedServerIcon pickIcon(Preset preset, long nowMs) {
-        List<String> frames = preset.iconFrames();
-        if (animEnabled && frames != null && !frames.isEmpty()) {
-            int idx = (int) ((nowMs / frameIntervalMs) % frames.size());
-            return loadIcon(frames.get(idx));
+    public CachedServerIcon pickIcon(Preset preset) {
+        String path = (preset != null) ? preset.icon() : null;
+
+        if (path == null || path.isBlank()) {
+            path = DEFAULT_ICON_TARGET;
         }
 
-        String single = preset.icon();
-        if (single == null || single.isBlank()) return null;
-        return loadIcon(single);
+        return loadIcon(path);
     }
 
-    /* =========================
-       Internal helpers
-       ========================= */
+    /*
+     * =========================
+     * Internal helpers
+     * =========================
+     */
 
     private void ensureIconsDirectory() {
         this.iconsDir = new File(plugin.getDataFolder(), "icons");
@@ -72,16 +66,17 @@ public final class IconCache {
     }
 
     private void ensureDefaultIconIfNoPngs() {
-        if (iconsDir == null || !iconsDir.isDirectory()) return;
+        if (iconsDir == null || !iconsDir.isDirectory())
+            return;
 
         File[] pngs = iconsDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png"));
         if (pngs != null && pngs.length > 0) {
-            return; // уже есть png — заглушка не нужна
+            return; // already has png files
         }
 
         File target = new File(plugin.getDataFolder(), DEFAULT_ICON_TARGET);
         if (target.exists()) {
-            return; // по какой-то причине файл уже есть
+            return; // placeholder already exists
         }
 
         boolean ok = copyResourceToFile(DEFAULT_ICON_RESOURCE, target);
@@ -90,26 +85,26 @@ public final class IconCache {
         } else {
             plugin.getLogger().warning(
                     "No icons found and default icon resource is missing. " +
-                    "Add a 64x64 PNG at: " + target.getPath()
-            );
+                            "Add a 64x64 PNG at: " + target.getPath());
         }
     }
 
     private void warnIfIconsEmpty() {
-        if (iconsDir == null || !iconsDir.isDirectory()) return;
+        if (iconsDir == null || !iconsDir.isDirectory())
+            return;
 
         File[] pngs = iconsDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png"));
         if (pngs == null || pngs.length == 0) {
             plugin.getLogger().warning(
                     "Icons directory is empty. Server list icon will not be shown. " +
-                    "Place 64x64 PNG files into: " + iconsDir.getPath()
-            );
+                            "Place a 64x64 PNG into: " + iconsDir.getPath());
         }
     }
 
     private boolean copyResourceToFile(String resourcePath, File target) {
         try (InputStream in = plugin.getResource(resourcePath)) {
-            if (in == null) return false;
+            if (in == null)
+                return false;
 
             File parent = target.getParentFile();
             if (parent != null && !parent.exists() && !parent.mkdirs()) {
@@ -128,9 +123,15 @@ public final class IconCache {
     }
 
     private CachedServerIcon loadIcon(String relPath) {
-        if (relPath == null || relPath.isBlank()) return null;
+        if (relPath == null || relPath.isBlank())
+            return null;
+        String normalized = relPath;
+        if (!normalized.contains("/") && !normalized.contains("\\") && normalized.toLowerCase().endsWith(".png")) {
+            normalized = "icons/" + normalized;
+        }
+        normalized = normalized.replace("\\", "/");
 
-        return cache.computeIfAbsent(relPath, key -> {
+        return cache.computeIfAbsent(normalized, key -> {
             try {
                 File file = new File(plugin.getDataFolder(), key);
                 if (!file.exists()) {
@@ -141,7 +142,7 @@ public final class IconCache {
                 Server server = Bukkit.getServer();
                 return server.loadServerIcon(file);
             } catch (Exception e) {
-                plugin.getLogger().warning("Failed to load icon '" + relPath + "': " + e.getMessage());
+                plugin.getLogger().warning("Failed to load icon '" + normalized + "': " + e.getMessage());
                 return null;
             }
         });

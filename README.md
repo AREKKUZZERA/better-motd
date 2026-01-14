@@ -30,7 +30,7 @@ No NMS. No performance overhead.
 
 ## 📦 Compatibility
 
-- **Minecraft:** 1.21 – 1.21.11  
+- **Minecraft:** 1.21 - 1.21.11  
 - **Server:** Paper  
 - **Java:** 21+
 

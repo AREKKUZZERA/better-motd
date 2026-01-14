@@ -6,23 +6,25 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-3DA639?style=flat-square&logo=opensourceinitiative&logoColor=white)
 ![Release](https://img.shields.io/github/v/release/AREKKUZZERA/better-motd?style=flat-square&logo=github)
 
-**BetterMOTD** - лёгкий и гибкий плагин для **Paper** серверов Minecraft, позволяющий настраивать
-динамический **MOTD** и **иконку сервера** с поддержкой анимаций, HEX-цветов и градиентов.
+**BetterMOTD** is a lightweight and flexible plugin for **Paper** Minecraft servers that provides
+dynamic **server MOTD** and **server icon** customization with support for animations, HEX colors,
+and gradients.
 
-Плагин не использует NMS, не нагружает сервер и легко кастомизируется через `config.yml`.
+The plugin is designed to be minimal, fast, and easy to configure.  
+No NMS. No performance overhead.
 
 ---
 
 ## ✨ Features
 
-- 🎨 Динамический MOTD (MiniMessage)
-- 🌈 HEX-цвета, градиенты и форматирование
-- 🔁 Анимированный MOTD (кадры)
-- 🖼️ Смена и анимация иконки сервера
-- 🎯 Взвешенный рандом или sticky-режим по IP
-- 📁 Автосоздание папки `icons/`
-- 🧩 Заглушка `default.png` при первом запуске
-- ⚡ Минимальный overhead, без NMS
+- 🎨 Dynamic MOTD with **MiniMessage** support
+- 🌈 HEX colors, gradients, and formatting
+- 🔁 Animated MOTD (frame-based)
+- 🖼️ Server icon switching and animation
+- 🎯 Weighted random or sticky-per-IP preset selection
+- 📁 Automatic `icons/` directory creation
+- 🧩 Default icon (`default.png`) generated on first startup
+- ⚡ Lightweight, async-safe implementation
 
 ---
 
@@ -36,30 +38,52 @@
 
 ## 🚀 Installation
 
-1. Перейдите на страницу [релизов](https://github.com/AREKKUZZERA/better-motd/releases)
-2. Скачайте **последний релиз** (`BetterMOTD-<version>.jar`)
-3. Поместите JAR-файл в папку `plugins/`
-4. Запустите сервер
-5. Настройте файл `plugins/BetterMOTD/config.yml`
-6. Перезапустите сервер или выполните `/reload` (не рекомендуется, могут быть ошибки)
+1. Open the [releases page](https://github.com/AREKKUZZERA/better-motd/releases)
+2. Download the **latest release** (`BetterMOTD-<version>.jar`)
+3. Place the JAR file into your server’s `plugins/` directory
+4. Start the server
+5. Edit `plugins/BetterMOTD/config.yml`
+6. Restart the server  
+   > `/reload` is not recommended for production environments
+
+---
+
+## ⚡ Quick Start
+
+After the first server start, the plugin will automatically generate:
+
+```txt
+plugins/BetterMOTD/
+ ├─ config.yml
+ └─ icons/
+    └─ default.png
+````
+
+You can immediately customize:
+
+* MOTD text and animation frames
+* Server icons
+* Preset weights and selection mode
 
 ---
 
 ## 🖼️ Server Icons
 
-- Формат: **PNG**
-- Размер: **64×64**
-- Путь: `plugins/BetterMOTD/icons/`
+* **Format:** PNG
+* **Resolution:** 64×64
+* **Path:** `plugins/BetterMOTD/icons/`
 
-Если папка пуста, плагин автоматически создаст:
+If the `icons/` directory is empty, a default placeholder icon is created automatically.
 
 ```txt
 icons/default.png
-````
+```
 
 ---
 
-## 📝 Example MOTD (MiniMessage)
+## 📝 MOTD Format (MiniMessage)
+
+BetterMOTD uses **MiniMessage**, allowing modern formatting:
 
 ```yml
 motd:
@@ -67,22 +91,49 @@ motd:
   - "<gray>Online players: <green>%online%</green></gray>"
 ```
 
+Animated MOTD can be defined using frame lists with a configurable interval.
+
+---
+
+## 🎛️ Presets & Selection Modes
+
+BetterMOTD supports multiple presets with configurable weights.
+
+### Selection modes:
+
+* **RANDOM** — random preset on each ping
+* **STICKY_PER_IP** — same preset for a client during a short time window
+
+This allows consistent visuals for players while still keeping variety.
+
 ---
 
 ## ⚙️ Configuration
 
-Основные параметры:
+All settings are located in `config.yml`.
 
-* режим выбора (`RANDOM` / `STICKY_PER_IP`)
-* вес пресетов
-* анимация MOTD
-* анимация иконок
+Main configuration areas:
 
-Все настройки находятся в `config.yml`.
+* preset definitions and weights
+* MOTD frames and animation speed
+* server icon frames
+* selection mode and sticky TTL
+
+The configuration is human-readable and safe to edit without restarts (restart recommended).
+
+---
+
+## 🧠 Performance & Safety
+
+* No NMS usage
+* No packet interception
+* No impact on gameplay or tick performance
+* Uses Paper API and Adventure components only
+* Safe for large public servers
 
 ---
 
 ## 📄 License
 
 This project is licensed under the **MIT License**.
-You are free to use, modify, and distribute it.
+You are free to use, modify, and distribute this plugin.

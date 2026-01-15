@@ -1,7 +1,7 @@
 # BetterMOTD
 
-![Paper](https://img.shields.io/badge/Paper-1.21.x-ffffff?style=flat-square&logo=papermc&logoColor=blue)
-![Java](https://img.shields.io/badge/Java-21%2B-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
+![Java Version](https://img.shields.io/badge/Java-21+-blue)
+![PaperMC](https://img.shields.io/badge/Paper-1.21.x-white)
 ![Release](https://img.shields.io/github/v/release/AREKKUZZERA/better-motd?style=flat-square&logo=github)
 [![Modrinth](https://img.shields.io/badge/Modrinth-Available-1bd96a?logo=modrinth&logoColor=white)](https://modrinth.com/plugin/better-motd)
 

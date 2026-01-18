@@ -10,11 +10,9 @@ import java.util.logging.Logger;
 
 public final class ActiveProfileStore {
 
-    private final JavaPlugin plugin;
     private final File stateFile;
 
     public ActiveProfileStore(JavaPlugin plugin) {
-        this.plugin = plugin;
         this.stateFile = new File(plugin.getDataFolder(), "state.yml");
     }
 

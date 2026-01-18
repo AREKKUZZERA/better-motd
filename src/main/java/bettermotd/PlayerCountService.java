@@ -49,7 +49,7 @@ public final class PlayerCountService {
         }
 
         try {
-            event.setNumPlayers(result.displayOnline());
+            event.setMaxPlayers(result.displayOnline());
             event.setMaxPlayers(result.displayMax());
         } catch (Exception e) {
             if (logger != null) {

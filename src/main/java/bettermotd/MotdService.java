@@ -97,6 +97,7 @@ public final class MotdService {
         return ids;
     }
 
+    @SuppressWarnings("deprecation")
     public void apply(ServerListPingEvent event) {
         if (event == null) {
             return;

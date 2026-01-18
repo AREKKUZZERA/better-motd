@@ -7,19 +7,10 @@ author: DefaultSquad
 commands:
   bettermotd:
     description: Manage BetterMOTD
-    usage: /bettermotd <reload|test|stats>
+    usage: /bettermotd <reload|profile|preview>
     aliases: [bm]
 
 permissions:
   bettermotd.admin:
     description: Grants all BetterMOTD commands
-    default: op
-  bettermotd.reload:
-    description: Reload BetterMOTD config
-    default: op
-  bettermotd.test:
-    description: Test preset selection and MOTD
-    default: op
-  bettermotd.stats:
-    description: View preset pick stats
     default: op

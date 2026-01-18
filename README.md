@@ -64,6 +64,16 @@ You can immediately customize:
 
 ---
 
+## 🧰 Commands
+
+All commands require the `bettermotd.admin` permission (default: op).
+
+* `/bettermotd reload` - Reload the config and caches.
+* `/bettermotd profile <profileId>` - Switch the active profile.
+* `/bettermotd preview <profileId|presetId>` - Print a preview of the selected preset.
+
+---
+
 ## 🖼️ Server Icons
 
 * **Format:** PNG

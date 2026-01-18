@@ -8,6 +8,7 @@ import org.bukkit.util.CachedServerIcon;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,12 +26,13 @@ public final class IconCache {
         this.plugin = plugin;
     }
 
-    public void reload(ConfigModel cfg) {
+    public void reload(Collection<String> iconPaths) {
         cache.clear();
 
         ensureIconsDirectory();
         ensureDefaultIconIfNoPngs();
         warnIfIconsEmpty();
+        preload(iconPaths);
     }
 
     public void clear() {
@@ -44,7 +46,7 @@ public final class IconCache {
             path = DEFAULT_ICON_TARGET;
         }
 
-        return loadIcon(path);
+        return cache.get(path);
     }
 
     public static String normalizeIconPath(String relPath) {
@@ -64,6 +66,18 @@ public final class IconCache {
      * =========================
      */
 
+    private void preload(Collection<String> iconPaths) {
+        if (iconPaths == null || iconPaths.isEmpty()) {
+            return;
+        }
+        for (String path : iconPaths) {
+            if (path == null || path.isBlank()) {
+                continue;
+            }
+            loadIcon(path);
+        }
+    }
+
     private void ensureIconsDirectory() {
         this.iconsDir = new File(plugin.getDataFolder(), "icons");
 
@@ -77,8 +91,9 @@ public final class IconCache {
     }
 
     private void ensureDefaultIconIfNoPngs() {
-        if (iconsDir == null || !iconsDir.isDirectory())
+        if (iconsDir == null || !iconsDir.isDirectory()) {
             return;
+        }
 
         File[] pngs = iconsDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png"));
         if (pngs != null && pngs.length > 0) {
@@ -101,8 +116,9 @@ public final class IconCache {
     }
 
     private void warnIfIconsEmpty() {
-        if (iconsDir == null || !iconsDir.isDirectory())
+        if (iconsDir == null || !iconsDir.isDirectory()) {
             return;
+        }
 
         File[] pngs = iconsDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png"));
         if (pngs == null || pngs.length == 0) {
@@ -114,8 +130,9 @@ public final class IconCache {
 
     private boolean copyResourceToFile(String resourcePath, File target) {
         try (InputStream in = plugin.getResource(resourcePath)) {
-            if (in == null)
+            if (in == null) {
                 return false;
+            }
 
             File parent = target.getParentFile();
             if (parent != null && !parent.exists() && !parent.mkdirs()) {
@@ -135,8 +152,9 @@ public final class IconCache {
 
     private CachedServerIcon loadIcon(String relPath) {
         String normalized = normalizeIconPath(relPath);
-        if (normalized == null)
+        if (normalized == null) {
             return null;
+        }
 
         return cache.computeIfAbsent(normalized, key -> {
             try {

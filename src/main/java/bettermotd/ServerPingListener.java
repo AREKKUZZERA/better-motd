@@ -1,6 +1,5 @@
 package bettermotd;
 
-import com.destroystokyo.paper.event.server.PaperServerListPingEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerListPingEvent;
@@ -14,12 +13,7 @@ public final class ServerPingListener implements Listener {
     }
 
     @EventHandler
-    public void onPaperPing(PaperServerListPingEvent event) {
-        service.apply(event);
-    }
-
-    @EventHandler
-    public void onBukkitPing(ServerListPingEvent event) {
+    public void onPing(ServerListPingEvent event) {
         service.apply(event);
     }
 }

@@ -254,7 +254,8 @@ public final class MotdService {
         return createStickyEntry(profileId, ip, preset, now, ensureFrameSeed);
     }
 
-    private StickyEntry createStickyEntry(String profileId, String ip, Preset preset, long now, boolean ensureFrameSeed) {
+    private StickyEntry createStickyEntry(String profileId, String ip, Preset preset, long now,
+            boolean ensureFrameSeed) {
         if (ip == null) {
             return null;
         }

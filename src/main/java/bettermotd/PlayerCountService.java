@@ -10,6 +10,7 @@ import org.bukkit.event.server.ServerListPingEvent;
 public final class PlayerCountService {
 
     private final Logger logger;
+    private final AtomicBoolean warnedOnlineUnsupported = new AtomicBoolean();
     private final AtomicBoolean warnedHidePlayers = new AtomicBoolean();
     private final AtomicBoolean warnedHover = new AtomicBoolean();
 
@@ -22,10 +23,11 @@ public final class PlayerCountService {
         int safeMax = Math.max(0, max);
 
         Profile.PlayerCountSettings settings = profile.playerCount();
+
         int fakeDelta = computeFakePlayers(profile, settings.fakePlayers(), ip, safeOnline, nowMs);
         int displayOnline = safeOnline + fakeDelta;
-        int displayMax = safeMax;
 
+        int displayMax = safeMax;
         if (settings.justXMore().enabled()) {
             displayMax = Math.max(0, displayOnline + Math.max(0, settings.justXMore().x()));
         }
@@ -44,17 +46,34 @@ public final class PlayerCountService {
     }
 
     public void apply(ServerListPingEvent event, PlayerCountResult result, PaperPingAdapter paper) {
-        if (event == null || result == null) {
+        if (event == null || result == null)
             return;
+
+        boolean onlineApplied = false;
+        if (paper != null) {
+            onlineApplied = paper.applyOnlinePlayers(event, result.displayOnline());
         }
 
         try {
-            // Use setNumPlayers for online count; setMaxPlayers is max slots.
-            event.setNumPlayers(result.displayOnline());
             event.setMaxPlayers(result.displayMax());
         } catch (Exception e) {
-            if (logger != null) {
-                logger.warning("Failed to set player counts: " + e.getMessage());
+            warn("Failed to set max players: " + e.getMessage());
+        }
+
+        if (!onlineApplied) {
+            int realOnline = Math.max(0, event.getNumPlayers());
+            if (result.displayMax() < realOnline) {
+                try {
+                    event.setMaxPlayers(realOnline);
+                } catch (Exception ignored) {
+                }
+            }
+
+            if (result.fakeDelta() != 0) {
+                warnOnce(warnedOnlineUnsupported,
+                        "fakePlayers is enabled, but this server does not support setting online player count via Bukkit. "
+                                +
+                                "Install/use Paper to enable fake online count.");
             }
         }
 
@@ -75,9 +94,8 @@ public final class PlayerCountService {
 
     private int computeFakePlayers(Profile profile, Profile.FakePlayersSettings fakePlayers, String ip, int online,
             long nowMs) {
-        if (fakePlayers == null || !fakePlayers.enabled()) {
+        if (fakePlayers == null || !fakePlayers.enabled())
             return 0;
-        }
 
         return switch (fakePlayers.mode()) {
             case STATIC -> Math.max(0, fakePlayers.min());
@@ -89,25 +107,30 @@ public final class PlayerCountService {
     private int randomBetween(int min, int max, ConfigModel.SelectionMode selectionMode, String ip, long nowMs) {
         int low = Math.max(0, Math.min(min, max));
         int high = Math.max(low, Math.max(min, max));
-        if (low == high) {
+        if (low == high)
             return low;
-        }
+
         if (selectionMode == ConfigModel.SelectionMode.STICKY_PER_IP && ip != null) {
-            long bucket = nowMs / 60000L;
+            long bucket = nowMs / 60000L; // 1-minute buckets for stability
             long seed = Objects.hash(ip, bucket);
             java.util.Random random = new java.util.Random(seed);
             return random.nextInt(high - low + 1) + low;
         }
+
         return ThreadLocalRandom.current().nextInt(low, high + 1);
     }
 
     private void warnOnce(AtomicBoolean flag, String message) {
-        if (logger == null) {
+        if (logger == null)
             return;
-        }
         if (flag.compareAndSet(false, true)) {
             logger.warning(message);
         }
+    }
+
+    private void warn(String message) {
+        if (logger != null)
+            logger.warning(message);
     }
 
     public record PlayerCountResult(

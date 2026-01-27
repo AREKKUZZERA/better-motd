@@ -134,7 +134,6 @@ public final class MotdService {
         return ids;
     }
 
-    @SuppressWarnings("deprecation")
     public void apply(ServerListPingEvent event) {
         if (event == null) {
             return;
@@ -151,7 +150,8 @@ public final class MotdService {
                         return;
                     }
                     plugin.getLogger().warning(
-                            "whitelist.nonWhitelistedMotdProfile is set to '" + whitelistSettings.nonWhitelistedMotdProfile()
+                            "whitelist.nonWhitelistedMotdProfile is set to '"
+                                    + whitelistSettings.nonWhitelistedMotdProfile()
                                     + "' but no such profile exists. Falling back to whitelist mode.");
                 }
                 if (whitelistSettings.mode() == ConfigModel.WhitelistMode.OFFLINE_FOR_NON_WHITELISTED) {
@@ -220,6 +220,13 @@ public final class MotdService {
                 counts);
     }
 
+    @SuppressWarnings("deprecation")
+    private static void setLegacyMotd(ServerListPingEvent event, String motd) {
+        if (event == null)
+            return;
+        event.setMotd(motd);
+    }
+
     private void applySelection(ServerListPingEvent event, RequestContext ctx, Profile profile) {
         SelectionResult selection = selectPreset(profile, ctx, true);
         PlayerCountService.PlayerCountResult counts = playerCountService.compute(profile, ctx.ip(),
@@ -230,7 +237,7 @@ public final class MotdService {
 
         boolean usedPaper = paperAdapter.applyMotd(event, parsed.component());
         if (!usedPaper) {
-            event.setMotd(textFormatService.serializeToLegacy(parsed.component()));
+            setLegacyMotd(event, textFormatService.serializeToLegacy(parsed.component()));
         }
 
         playerCountService.apply(event, counts, paperAdapter);
@@ -258,7 +265,7 @@ public final class MotdService {
 
         boolean usedPaper = paperAdapter.applyMotd(event, parsed.component());
         if (!usedPaper) {
-            event.setMotd(textFormatService.serializeToLegacy(parsed.component()));
+            setLegacyMotd(event, textFormatService.serializeToLegacy(parsed.component()));
         }
 
         try {
@@ -445,7 +452,8 @@ public final class MotdService {
     private MotdRenderResult renderMotd(Profile profile, SelectionResult selection,
             PlayerCountService.PlayerCountResult counts, RequestContext ctx) {
         FrameSelection frameSelection = selectFrame(profile, selection, ctx);
-        return renderMotd(profile.id(), selection.preset(), frameSelection.frame(), counts, ctx, frameSelection.index());
+        return renderMotd(profile.id(), selection.preset(), frameSelection.frame(), counts, ctx,
+                frameSelection.index());
     }
 
     private MotdRenderResult renderMotd(String profileId, Preset preset, CachedFrame frame,
@@ -648,7 +656,8 @@ public final class MotdService {
     private CachedFrame buildCachedFrame(String raw, Profile profile, Preset preset) {
         boolean hasPlaceholders = hasPlaceholders(raw);
         if (!hasPlaceholders) {
-            TextFormatService.ParseResult parsed = textFormatService.parseToComponentDetailed(raw, config.colorFormat());
+            TextFormatService.ParseResult parsed = textFormatService.parseToComponentDetailed(raw,
+                    config.colorFormat());
             warnIfFallback(profile, preset, parsed);
             return new CachedFrame(raw, false, parsed.component(), parsed.usedFormat(), parsed.fallbackUsed());
         }
@@ -663,7 +672,8 @@ public final class MotdService {
         String raw = lines.get(0) + "\n" + lines.get(1);
         boolean hasPlaceholders = hasPlaceholders(raw);
         if (!hasPlaceholders) {
-            TextFormatService.ParseResult parsed = textFormatService.parseToComponentDetailed(raw, config.colorFormat());
+            TextFormatService.ParseResult parsed = textFormatService.parseToComponentDetailed(raw,
+                    config.colorFormat());
             return new CachedFrame(raw, false, parsed.component(), parsed.usedFormat(), parsed.fallbackUsed());
         }
         return new CachedFrame(raw, true, null, config.colorFormat(), false);
@@ -729,8 +739,8 @@ public final class MotdService {
         }
 
         int checked = 0;
-        for (var iterator = state.entries().entrySet().iterator();
-                iterator.hasNext() && checked < STICKY_CLEANUP_BATCH;) {
+        for (var iterator = state.entries().entrySet().iterator(); iterator.hasNext()
+                && checked < STICKY_CLEANUP_BATCH;) {
             Map.Entry<String, StickyEntry> entry = iterator.next();
             checked++;
             if (!isStickyValid(entry.getValue(), nowMs, ttlMs)) {

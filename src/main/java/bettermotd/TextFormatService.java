@@ -2,6 +2,7 @@ package bettermotd;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
@@ -9,11 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public final class TextFormatService {
 
     private static final Pattern AMPERSAND_HEX_PATTERN = Pattern.compile("&#([0-9a-fA-F]{6})");
+    private static final Pattern MINIMESSAGE_TAG_PATTERN = Pattern.compile(
+            "<(?:/?[a-z][a-z0-9_:-]*(?::[^>]+)?|#[0-9a-fA-F]{6})>",
+            Pattern.CASE_INSENSITIVE);
 
     private final MiniMessage miniMessage;
     private final LegacyComponentSerializer legacySectionSerializer;
@@ -100,7 +103,7 @@ public final class TextFormatService {
                 case JSON -> GsonComponentSerializer.gson().deserialize(input);
                 case LEGACY_SECTION -> legacySectionSerializer.deserialize(input);
                 case LEGACY_AMPERSAND -> legacyAmpersandSerializer.deserialize(input);
-                case AUTO -> Component.text(input);
+                case AUTO, AUTO_STRICT -> Component.text(input);
             };
             return new ParseResult(component, resolved, false);
         } catch (Exception e) {
@@ -109,13 +112,13 @@ public final class TextFormatService {
     }
 
     private ColorFormat resolveFormat(String input, ColorFormat format) {
-        if (format == null || format == ColorFormat.AUTO) {
-            return detectFormat(input);
+        if (format == null || format == ColorFormat.AUTO || format == ColorFormat.AUTO_STRICT) {
+            return detectFormat(input, format == ColorFormat.AUTO_STRICT);
         }
         return format;
     }
 
-    private ColorFormat detectFormat(String input) {
+    private ColorFormat detectFormat(String input, boolean strictMiniMessage) {
         if (input == null || input.isEmpty()) {
             return ColorFormat.AUTO;
         }
@@ -123,7 +126,7 @@ public final class TextFormatService {
         if (looksLikeJson(trimmed)) {
             return ColorFormat.JSON;
         }
-        if (trimmed.contains("<") && trimmed.contains(">")) {
+        if (looksLikeMiniMessage(trimmed)) {
             return ColorFormat.MINI_MESSAGE;
         }
         if (AMPERSAND_HEX_PATTERN.matcher(trimmed).find()) {
@@ -141,7 +144,11 @@ public final class TextFormatService {
         if (trimmed.indexOf('&') >= 0) {
             return ColorFormat.LEGACY_AMPERSAND;
         }
-        return ColorFormat.AUTO;
+        return strictMiniMessage ? ColorFormat.AUTO_STRICT : ColorFormat.AUTO;
+    }
+
+    private boolean looksLikeMiniMessage(String input) {
+        return MINIMESSAGE_TAG_PATTERN.matcher(input).find();
     }
 
     private boolean looksLikeJson(String trimmed) {

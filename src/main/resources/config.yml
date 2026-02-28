@@ -13,6 +13,7 @@ placeholders:
 # - LEGACY_SECTION (§a, §x§0§0§D§4§3§1)
 # - LEGACY_AMPERSAND (&a, &x&0&0&D&4&3&1)
 # - AUTO (detects based on content)
+# - AUTO_STRICT (same as AUTO, but MiniMessage only on explicit tags)
 colorFormat: "AUTO"
 
 # Enable internal formatter self-tests on startup (logs warnings only).

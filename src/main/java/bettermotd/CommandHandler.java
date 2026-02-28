@@ -16,7 +16,7 @@ import java.util.Set;
 
 public final class CommandHandler implements CommandExecutor, TabCompleter {
 
-    private static final List<String> SUBCOMMANDS = List.of("reload", "profile", "preview");
+    private static final List<String> SUBCOMMANDS = List.of("reload", "profile", "preview", "diagnostics");
 
     private final JavaPlugin plugin;
     private final MotdService motdService;
@@ -48,6 +48,7 @@ public final class CommandHandler implements CommandExecutor, TabCompleter {
                 case "reload" -> handleReload(sender);
                 case "profile" -> handleProfile(sender, args);
                 case "preview" -> handlePreview(sender, args);
+                case "diagnostics" -> handleDiagnostics(sender);
                 default -> {
                     sendUsage(sender);
                     yield true;
@@ -138,6 +139,18 @@ public final class CommandHandler implements CommandExecutor, TabCompleter {
         return true;
     }
 
+
+    private boolean handleDiagnostics(CommandSender sender) {
+        MotdService.Diagnostics diagnostics = motdService.diagnostics();
+        sender.sendMessage("BetterMOTD diagnostics:");
+        sender.sendMessage("- active profile: " + diagnostics.activeProfile());
+        sender.sendMessage("- sticky entries by profile: " + diagnostics.stickyEntriesByProfile());
+        sender.sendMessage("- rotate counters: " + diagnostics.rotateCounterProfiles());
+        sender.sendMessage("- preset cache size: " + diagnostics.presetCacheSize());
+        sender.sendMessage("- formatter warnings cached: " + diagnostics.formatWarnings());
+        return true;
+    }
+
     private void listProfiles(CommandSender sender) {
         Set<String> profiles = motdService.getProfileIds();
         if (profiles.isEmpty()) {
@@ -149,7 +162,7 @@ public final class CommandHandler implements CommandExecutor, TabCompleter {
     }
 
     private void sendUsage(CommandSender sender) {
-        sender.sendMessage("Usage: /bettermotd <reload|profile|preview>");
+        sender.sendMessage("Usage: /bettermotd <reload|profile|preview|diagnostics>");
     }
 
     private MotdService.ReloadResult reloadAll() {

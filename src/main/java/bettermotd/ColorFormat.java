@@ -8,7 +8,8 @@ public enum ColorFormat {
     JSON,
     LEGACY_SECTION,
     LEGACY_AMPERSAND,
-    AUTO;
+    AUTO,
+    AUTO_STRICT;
 
     public static ColorFormat from(String raw) {
         if (raw == null) {

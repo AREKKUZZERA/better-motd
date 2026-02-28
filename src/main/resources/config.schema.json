@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BetterMOTD config",
+  "type": "object",
+  "properties": {
+    "activeProfile": {"type": "string", "default": "default"},
+    "placeholders": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean", "default": true}
+      }
+    },
+    "colorFormat": {
+      "type": "string",
+      "enum": ["AUTO", "AUTO_STRICT", "MINI_MESSAGE", "HEX_AMPERSAND", "JSON", "LEGACY_SECTION", "LEGACY_AMPERSAND"],
+      "default": "AUTO"
+    },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "selectionMode": {"type": "string", "enum": ["RANDOM", "STICKY_PER_IP", "HASHED_PER_IP", "ROTATE"]},
+          "stickyTtlSeconds": {"type": "integer", "minimum": 1},
+          "stickyMaxEntriesPerProfile": {"type": "integer", "minimum": 1},
+          "stickyCleanupEveryNPings": {"type": "integer", "minimum": 1}
+        }
+      }
+    }
+  }
+}

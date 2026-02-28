@@ -72,6 +72,7 @@ All commands require the `bettermotd.admin` permission (default: op).
 * `/bettermotd reload` - Reload the config and caches.
 * `/bettermotd profile <profileId>` - Switch the active profile.
 * `/bettermotd preview <profileId|presetId>` - Print a preview of the selected preset.
+* `/bettermotd diagnostics` - Show active profile, cache sizes, sticky counts, and formatter warning stats.
 
 ---
 
@@ -91,7 +92,7 @@ icons/default.png
 
 ## 📝 MOTD Format
 
-BetterMOTD supports multiple formatting syntaxes and automatically detects them in `AUTO` mode:
+BetterMOTD supports multiple formatting syntaxes and automatically detects them in `AUTO`/`AUTO_STRICT` modes:
 
 - MiniMessage tags (`<gradient:#00ffcc:#0099ff>`, `<#00ffcc>`, `<bold>`, etc.)
 - Birdflop-style inline hex (`&#00D431Text`)
@@ -142,6 +143,22 @@ Main configuration areas:
 
 ---
 
+
+## 📋 Config Reference
+
+| Key | Default | Description |
+|---|---|---|
+| `activeProfile` | `default` | Profile ID used for ping handling. |
+| `placeholders.enabled` | `true` | Enables `%online%`, `%max%`, `%preset%`, `%profile%`, `%motd_frame%`, `%time%`. |
+| `colorFormat` | `AUTO` | Text parser mode (`AUTO_STRICT` avoids false MiniMessage detection like `1 < 2 > 0`). |
+| `profiles.<id>.selectionMode` | `STICKY_PER_IP` | Preset strategy: `RANDOM`, `STICKY_PER_IP`, `HASHED_PER_IP`, `ROTATE`. |
+| `profiles.<id>.stickyTtlSeconds` | `10` | Sticky lifetime for STICKY mode. |
+| `profiles.<id>.stickyMaxEntriesPerProfile` | `10000` | Hard cap for sticky entries per profile. |
+| `profiles.<id>.stickyCleanupEveryNPings` | `500` | Cleanup cadence. |
+| `profiles.<id>.animation.frameIntervalMillis` | `450` | MOTD animation frame interval. |
+
+A machine-readable schema is provided at `src/main/resources/config.schema.json`.
+
 ## ⚡ Performance Notes
 
 * Non-placeholder MOTD frames are parsed once and reused on each ping.
@@ -157,11 +174,6 @@ Main configuration areas:
 ---
 
 ## 🧾 CHANGELOG
-
-### 1.5.0
-
-* **Breaking:** removed whitelist MOTD + whitelist gate support and virtual host routing.
-* Simplified configuration and reduced runtime branching for profile selection.
 
 ### 1.4.0
 

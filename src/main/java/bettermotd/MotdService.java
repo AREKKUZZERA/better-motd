@@ -11,7 +11,6 @@ import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,6 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -331,7 +331,7 @@ public final class MotdService {
 
     private StickyProfileState stickyState(String profileId) {
         return stickyStates.computeIfAbsent(profileId,
-                key -> new StickyProfileState(new ConcurrentHashMap<>(), new ArrayDeque<>(), new AtomicInteger()));
+                key -> new StickyProfileState(new ConcurrentHashMap<>(), new ConcurrentLinkedDeque<>(), new AtomicInteger()));
     }
 
     private Preset hashedPreset(List<Preset> presets, String ip) {
@@ -645,55 +645,25 @@ public final class MotdService {
             return;
         }
 
-        int checked = 0;
-        for (var iterator = state.entries().entrySet().iterator(); iterator.hasNext()
-                && checked < STICKY_CLEANUP_BATCH;) {
-            Map.Entry<String, StickyEntry> entry = iterator.next();
-            checked++;
-            if (!isStickyValid(entry.getValue(), nowMs, ttlMs)) {
-                iterator.remove();
-            }
-        }
+        StickyStateSupport.cleanupExpired(state.entries(), nowMs, ttlMs, STICKY_CLEANUP_BATCH,
+                (entry, threshold) -> entry != null && entry.createdAtMs() >= threshold);
 
         enforceStickyLimit(profile, state);
     }
 
     private void enforceStickyLimit(Profile profile, StickyProfileState state) {
         int maxEntries = profile.stickyMaxEntriesPerProfile();
-        if (maxEntries <= 0) {
-            return;
-        }
-        if (state.entries().size() <= maxEntries) {
-            return;
-        }
+        StickyStateSupport.enforceLimit(state.entries(), state.order(), maxEntries, STICKY_EVICTION_BATCH);
+    }
 
-        int evicted = 0;
-        while (state.entries().size() > maxEntries && evicted < STICKY_EVICTION_BATCH) {
-            String key = state.order().pollFirst();
-            if (key == null) {
-                break;
-            }
-            if (state.entries().remove(key) != null) {
-                evicted++;
-            }
-        }
 
-        if (state.entries().size() > maxEntries) {
-            List<String> candidates = new ArrayList<>(STICKY_EVICTION_BATCH);
-            for (String key : state.entries().keySet()) {
-                candidates.add(key);
-                if (candidates.size() >= STICKY_EVICTION_BATCH) {
-                    break;
-                }
-            }
-            Collections.sort(candidates);
-            for (String key : candidates) {
-                if (state.entries().size() <= maxEntries) {
-                    break;
-                }
-                state.entries().remove(key);
-            }
+    public Diagnostics diagnostics() {
+        Map<String, Integer> stickyByProfile = new ConcurrentHashMap<>();
+        for (Map.Entry<String, StickyProfileState> entry : stickyStates.entrySet()) {
+            stickyByProfile.put(entry.getKey(), entry.getValue().entries().size());
         }
+        return new Diagnostics(activeProfileId, stickyByProfile, rotateCounters.size(), presetCache.size(),
+                formatWarnings.size());
     }
 
     private String ctxString(ServerListPingEvent event) {
@@ -798,6 +768,11 @@ public final class MotdService {
             ColorFormat usedFormat,
             String iconPath,
             PlayerCountService.PlayerCountResult playerCounts) {
+    }
+
+
+    public record Diagnostics(String activeProfile, Map<String, Integer> stickyEntriesByProfile,
+            int rotateCounterProfiles, int presetCacheSize, int formatWarnings) {
     }
 
     private record RequestContext(String ip, long nowMs) {

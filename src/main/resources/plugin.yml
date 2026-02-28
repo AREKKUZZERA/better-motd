@@ -1,5 +1,5 @@
 name: BetterMOTD
-version: 1.4.0
+version: ${project.version}
 main: bettermotd.BetterMOTDPlugin
 api-version: "1.21"
 author: AREKKUZZERA
@@ -8,7 +8,7 @@ description: Flexible MOTD/icon plugin with MiniMessage, legacy, and JSON color 
 commands:
   bettermotd:
     description: Manage BetterMOTD
-    usage: /bettermotd <reload|profile|preview>
+    usage: /bettermotd <reload|profile|preview|diagnostics>
     aliases: [bm]
 
 permissions:

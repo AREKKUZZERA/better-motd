@@ -29,8 +29,8 @@ public final class MotdService {
     private static final int STICKY_EVICTION_BATCH = 200;
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
     private static final ZoneId SYSTEM_ZONE = ZoneId.systemDefault();
-    private static final String[] SUPPORTED_PLACEHOLDERS =
-            new String[] {"%online%", "%max%", "%version%", "%preset%", "%profile%", "%motd_frame%", "%time%"};
+    private static final String[] SUPPORTED_PLACEHOLDERS = new String[] { "%online%", "%max%", "%version%", "%preset%",
+            "%profile%", "%motd_frame%", "%time%" };
 
     private final JavaPlugin plugin;
     private final ActiveProfileStore profileStore;
@@ -58,8 +58,8 @@ public final class MotdService {
 
     public ReloadResult reload() {
         try {
-            ConfigModel.LoadResult result =
-                    ConfigModel.load(plugin.getConfig(), plugin.getDataFolder(), plugin.getLogger());
+            ConfigModel.LoadResult result = ConfigModel.load(plugin.getConfig(), plugin.getDataFolder(),
+                    plugin.getLogger());
             this.config = result.config();
             String desiredActive = profileStore.load(config.activeProfile(), plugin.getLogger());
             this.activeProfileId = resolveActiveProfile(desiredActive, config);
@@ -188,7 +188,8 @@ public final class MotdService {
 
     @SuppressWarnings("deprecation")
     private static void setLegacyMotd(ServerListPingEvent event, String motd) {
-        if (event == null) return;
+        if (event == null)
+            return;
         event.setMotd(motd);
     }
 
@@ -261,8 +262,7 @@ public final class MotdService {
                 entry = updateStickyEntry(profile.id(), ip, entry, chosen, now, ttlMs, true);
             }
         } else {
-            int totalWeight =
-                    presets.stream().mapToInt(p -> Math.max(1, p.weight())).sum();
+            int totalWeight = presets.stream().mapToInt(p -> Math.max(1, p.weight())).sum();
             chosen = weightedRandom(presets, ThreadLocalRandom.current().nextLong());
             reason = "RANDOM (weighted total=" + totalWeight + ")";
             if (perIpFrames && ip != null) {
@@ -340,7 +340,7 @@ public final class MotdService {
             return Preset.fallback(config.fallbackIconPath());
         }
         if (ip == null) {
-            int idx = (int) Math.floorMod(System.nanoTime(), presets.size());
+            int idx = Math.floorMod(System.nanoTime(), presets.size());
             return presets.get(idx);
         }
         int idx = Math.floorMod(ip.hashCode(), presets.size());
@@ -362,7 +362,7 @@ public final class MotdService {
             total += Math.max(1, p.weight());
         }
 
-        int r = (int) Math.floorMod(seed, total);
+        int r = Math.floorMod(seed, total);
 
         int acc = 0;
         for (Preset p : presets) {
@@ -441,7 +441,7 @@ public final class MotdService {
     private int computeFrameSeed(String profileId, long nowMs) {
         Profile profile = resolveProfile(profileId);
         long interval = profile.animation().frameIntervalMillis();
-        return (int) (nowMs / interval);
+        return Math.toIntExact(nowMs / interval);
     }
 
     private String applyPlaceholders(String input, PlaceholderValues values) {
@@ -591,8 +591,8 @@ public final class MotdService {
     private CachedFrame buildCachedFrame(String raw, Profile profile, Preset preset) {
         boolean hasPlaceholders = hasPlaceholders(raw);
         if (!hasPlaceholders) {
-            TextFormatService.ParseResult parsed =
-                    textFormatService.parseToComponentDetailed(raw, config.colorFormat());
+            TextFormatService.ParseResult parsed = textFormatService.parseToComponentDetailed(raw,
+                    config.colorFormat());
             warnIfFallback(profile, preset, parsed);
             return new CachedFrame(raw, false, parsed.component(), parsed.usedFormat(), parsed.fallbackUsed());
         }
@@ -730,8 +730,8 @@ public final class MotdService {
                 "&x&0&0&D&4&3&1MOTD");
         for (String sample : samples) {
             try {
-                TextFormatService.ParseResult parsed =
-                        textFormatService.parseToComponentDetailed(sample, ColorFormat.AUTO);
+                TextFormatService.ParseResult parsed = textFormatService.parseToComponentDetailed(sample,
+                        ColorFormat.AUTO);
                 if (parsed.fallbackUsed()) {
                     plugin.getLogger().warning("Self-test fallback used for sample: " + sample);
                 }
@@ -744,30 +744,39 @@ public final class MotdService {
         }
     }
 
-    private record StickyEntry(Preset preset, long createdAtMs, int frameSeed) {}
+    private record StickyEntry(Preset preset, long createdAtMs, int frameSeed) {
+    }
 
     private record StickyProfileState(
-            Map<String, StickyEntry> entries, Deque<String> order, AtomicInteger pingCounter) {}
+            Map<String, StickyEntry> entries, Deque<String> order, AtomicInteger pingCounter) {
+    }
 
-    private record SelectionResult(Preset preset, StickyEntry stickyEntry, String reason) {}
+    private record SelectionResult(Preset preset, StickyEntry stickyEntry, String reason) {
+    }
 
-    public record ReloadResult(boolean success, int warnings) {}
+    public record ReloadResult(boolean success, int warnings) {
+    }
 
     private record CachedFrame(
             String raw,
             boolean hasPlaceholders,
             Component cachedComponent,
             ColorFormat usedFormat,
-            boolean fallbackUsed) {}
+            boolean fallbackUsed) {
+    }
 
-    private record PresetCache(CachedFrame staticFrame, List<CachedFrame> animatedFrames) {}
+    private record PresetCache(CachedFrame staticFrame, List<CachedFrame> animatedFrames) {
+    }
 
-    private record FrameSelection(CachedFrame frame, int index) {}
+    private record FrameSelection(CachedFrame frame, int index) {
+    }
 
-    private record MotdRenderResult(String raw, TextFormatService.ParseResult parsed, int frameIndex) {}
+    private record MotdRenderResult(String raw, TextFormatService.ParseResult parsed, int frameIndex) {
+    }
 
     private record PlaceholderValues(
-            String online, String max, String version, String preset, String profile, String motdFrame, String time) {}
+            String online, String max, String version, String preset, String profile, String motdFrame, String time) {
+    }
 
     public record PreviewResult(
             String profileId,
@@ -779,14 +788,17 @@ public final class MotdService {
             ColorFormat configuredFormat,
             ColorFormat usedFormat,
             String iconPath,
-            PlayerCountService.PlayerCountResult playerCounts) {}
+            PlayerCountService.PlayerCountResult playerCounts) {
+    }
 
     public record Diagnostics(
             String activeProfile,
             Map<String, Integer> stickyEntriesByProfile,
             int rotateCounterProfiles,
             int presetCacheSize,
-            int formatWarnings) {}
+            int formatWarnings) {
+    }
 
-    private record RequestContext(String ip, long nowMs) {}
+    private record RequestContext(String ip, long nowMs) {
+    }
 }

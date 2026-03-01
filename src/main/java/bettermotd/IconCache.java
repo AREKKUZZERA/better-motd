@@ -1,16 +1,15 @@
 package bettermotd;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Server;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.CachedServerIcon;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.bukkit.Bukkit;
+import org.bukkit.Server;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.CachedServerIcon;
 
 public final class IconCache {
 
@@ -60,7 +59,9 @@ public final class IconCache {
             return null;
         }
         String normalized = relPath;
-        if (!normalized.contains("/") && !normalized.contains("\\") && normalized.toLowerCase().endsWith(".png")) {
+        if (!normalized.contains("/")
+                && !normalized.contains("\\")
+                && normalized.toLowerCase().endsWith(".png")) {
             normalized = "icons/" + normalized;
         }
         return normalized.replace("\\", "/");
@@ -110,9 +111,9 @@ public final class IconCache {
         if (ok) {
             plugin.getLogger().info("Created default icon: " + target.getPath());
         } else {
-            plugin.getLogger().warning(
-                    "No icons found and default icon resource is missing. " +
-                            "Add a 64x64 PNG at: " + target.getPath());
+            plugin.getLogger()
+                    .warning("No icons found and default icon resource is missing. " + "Add a 64x64 PNG at: "
+                            + target.getPath());
         }
     }
 
@@ -123,9 +124,9 @@ public final class IconCache {
 
         File[] pngs = iconsDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png"));
         if (pngs == null || pngs.length == 0) {
-            plugin.getLogger().warning(
-                    "Icons directory is empty. Server list icon will not be shown. " +
-                            "Place a 64x64 PNG into: " + iconsDir.getPath());
+            plugin.getLogger()
+                    .warning("Icons directory is empty. Server list icon will not be shown. "
+                            + "Place a 64x64 PNG into: " + iconsDir.getPath());
         }
     }
 

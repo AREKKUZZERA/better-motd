@@ -1,9 +1,9 @@
 package bettermotd;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import net.kyori.adventure.text.Component;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TextFormatServiceTest {
 
@@ -19,10 +19,13 @@ class TextFormatServiceTest {
 
     @Test
     void autoStrictDetectsRealMiniMessageTags() {
-        TextFormatService.ParseResult parsed = service.parseToComponentDetailed("<bold>Hello</bold>", ColorFormat.AUTO_STRICT);
+        TextFormatService.ParseResult parsed =
+                service.parseToComponentDetailed("<bold>Hello</bold>", ColorFormat.AUTO_STRICT);
 
         assertEquals(ColorFormat.MINI_MESSAGE, parsed.usedFormat());
-        assertEquals(Component.text("Hello").decorate(net.kyori.adventure.text.format.TextDecoration.BOLD), parsed.component());
+        assertEquals(
+                Component.text("Hello").decorate(net.kyori.adventure.text.format.TextDecoration.BOLD),
+                parsed.component());
     }
 
     @Test

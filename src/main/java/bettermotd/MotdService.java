@@ -1,11 +1,5 @@
 package bettermotd;
 
-import org.bukkit.Bukkit;
-import org.bukkit.event.server.ServerListPingEvent;
-import org.bukkit.plugin.java.JavaPlugin;
-
-import net.kyori.adventure.text.Component;
-
 import java.net.InetAddress;
 import java.time.Instant;
 import java.time.LocalTime;
@@ -24,6 +18,10 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
+import org.bukkit.event.server.ServerListPingEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public final class MotdService {
 
@@ -31,15 +29,8 @@ public final class MotdService {
     private static final int STICKY_EVICTION_BATCH = 200;
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
     private static final ZoneId SYSTEM_ZONE = ZoneId.systemDefault();
-    private static final String[] SUPPORTED_PLACEHOLDERS = new String[] {
-            "%online%",
-            "%max%",
-            "%version%",
-            "%preset%",
-            "%profile%",
-            "%motd_frame%",
-            "%time%"
-    };
+    private static final String[] SUPPORTED_PLACEHOLDERS =
+            new String[] {"%online%", "%max%", "%version%", "%preset%", "%profile%", "%motd_frame%", "%time%"};
 
     private final JavaPlugin plugin;
     private final ActiveProfileStore profileStore;
@@ -67,8 +58,8 @@ public final class MotdService {
 
     public ReloadResult reload() {
         try {
-            ConfigModel.LoadResult result = ConfigModel.load(plugin.getConfig(), plugin.getDataFolder(),
-                    plugin.getLogger());
+            ConfigModel.LoadResult result =
+                    ConfigModel.load(plugin.getConfig(), plugin.getDataFolder(), plugin.getLogger());
             this.config = result.config();
             String desiredActive = profileStore.load(config.activeProfile(), plugin.getLogger());
             this.activeProfileId = resolveActiveProfile(desiredActive, config);
@@ -137,7 +128,8 @@ public final class MotdService {
             Profile profile = resolveProfile(activeProfileId);
             applySelection(event, ctx, profile);
         } catch (Exception e) {
-            logException(Level.WARNING,
+            logException(
+                    Level.WARNING,
                     "BetterMOTD ping handling failed (profile=" + activeProfileId + ", ip=" + ctxString(event) + ").",
                     e);
         }
@@ -170,8 +162,8 @@ public final class MotdService {
             fromProfile = false;
         }
 
-        PlayerCountService.PlayerCountResult counts = playerCountService.compute(profile, ctx.ip(),
-                Bukkit.getOnlinePlayers().size(), Bukkit.getMaxPlayers(), now);
+        PlayerCountService.PlayerCountResult counts = playerCountService.compute(
+                profile, ctx.ip(), Bukkit.getOnlinePlayers().size(), Bukkit.getMaxPlayers(), now);
         MotdRenderResult render = renderMotd(profile, selection, counts, ctx);
         String motdRaw = render.raw();
         TextFormatService.ParseResult parsed = render.parsed();
@@ -196,15 +188,14 @@ public final class MotdService {
 
     @SuppressWarnings("deprecation")
     private static void setLegacyMotd(ServerListPingEvent event, String motd) {
-        if (event == null)
-            return;
+        if (event == null) return;
         event.setMotd(motd);
     }
 
     private void applySelection(ServerListPingEvent event, RequestContext ctx, Profile profile) {
         SelectionResult selection = selectPreset(profile, ctx, true);
-        PlayerCountService.PlayerCountResult counts = playerCountService.compute(profile, ctx.ip(),
-                event.getNumPlayers(), event.getMaxPlayers(), ctx.nowMs());
+        PlayerCountService.PlayerCountResult counts = playerCountService.compute(
+                profile, ctx.ip(), event.getNumPlayers(), event.getMaxPlayers(), ctx.nowMs());
         MotdRenderResult render = renderMotd(profile, selection, counts, ctx);
         TextFormatService.ParseResult parsed = render.parsed();
         warnIfFallback(profile, selection.preset(), parsed);
@@ -219,13 +210,14 @@ public final class MotdService {
         try {
             event.setServerIcon(iconCache.pickIcon(selection.preset()));
         } catch (Exception e) {
-            logException(Level.WARNING,
+            logException(
+                    Level.WARNING,
                     "Failed to set server icon for profile '" + profile.id() + "', preset '"
-                            + selection.preset().id() + "', icon '" + selection.preset().icon() + "'.",
+                            + selection.preset().id() + "', icon '"
+                            + selection.preset().icon() + "'.",
                     e);
         }
     }
-
 
     private SelectionResult selectPreset(Profile profile, RequestContext ctx, boolean count) {
         List<Preset> presets = profile.presets();
@@ -269,7 +261,8 @@ public final class MotdService {
                 entry = updateStickyEntry(profile.id(), ip, entry, chosen, now, ttlMs, true);
             }
         } else {
-            int totalWeight = presets.stream().mapToInt(p -> Math.max(1, p.weight())).sum();
+            int totalWeight =
+                    presets.stream().mapToInt(p -> Math.max(1, p.weight())).sum();
             chosen = weightedRandom(presets, ThreadLocalRandom.current().nextLong());
             reason = "RANDOM (weighted total=" + totalWeight + ")";
             if (perIpFrames && ip != null) {
@@ -280,8 +273,14 @@ public final class MotdService {
         return new SelectionResult(chosen, entry, reason);
     }
 
-    private StickyEntry updateStickyEntry(String profileId, String ip, StickyEntry existing, Preset preset, long now,
-            long ttlMs, boolean ensureFrameSeed) {
+    private StickyEntry updateStickyEntry(
+            String profileId,
+            String ip,
+            StickyEntry existing,
+            Preset preset,
+            long now,
+            long ttlMs,
+            boolean ensureFrameSeed) {
         if (ip == null) {
             return null;
         }
@@ -295,8 +294,8 @@ public final class MotdService {
         return createStickyEntry(profileId, ip, preset, now, ensureFrameSeed);
     }
 
-    private StickyEntry createStickyEntry(String profileId, String ip, Preset preset, long now,
-            boolean ensureFrameSeed) {
+    private StickyEntry createStickyEntry(
+            String profileId, String ip, Preset preset, long now, boolean ensureFrameSeed) {
         if (ip == null) {
             return null;
         }
@@ -330,8 +329,10 @@ public final class MotdService {
     }
 
     private StickyProfileState stickyState(String profileId) {
-        return stickyStates.computeIfAbsent(profileId,
-                key -> new StickyProfileState(new ConcurrentHashMap<>(), new ConcurrentLinkedDeque<>(), new AtomicInteger()));
+        return stickyStates.computeIfAbsent(
+                profileId,
+                key -> new StickyProfileState(
+                        new ConcurrentHashMap<>(), new ConcurrentLinkedDeque<>(), new AtomicInteger()));
     }
 
     private Preset hashedPreset(List<Preset> presets, String ip) {
@@ -373,15 +374,23 @@ public final class MotdService {
         return presets.get(0);
     }
 
-    private MotdRenderResult renderMotd(Profile profile, SelectionResult selection,
-            PlayerCountService.PlayerCountResult counts, RequestContext ctx) {
+    private MotdRenderResult renderMotd(
+            Profile profile,
+            SelectionResult selection,
+            PlayerCountService.PlayerCountResult counts,
+            RequestContext ctx) {
         FrameSelection frameSelection = selectFrame(profile, selection, ctx);
-        return renderMotd(profile.id(), selection.preset(), frameSelection.frame(), counts, ctx,
-                frameSelection.index());
+        return renderMotd(
+                profile.id(), selection.preset(), frameSelection.frame(), counts, ctx, frameSelection.index());
     }
 
-    private MotdRenderResult renderMotd(String profileId, Preset preset, CachedFrame frame,
-            PlayerCountService.PlayerCountResult counts, RequestContext ctx, int frameIndex) {
+    private MotdRenderResult renderMotd(
+            String profileId,
+            Preset preset,
+            CachedFrame frame,
+            PlayerCountService.PlayerCountResult counts,
+            RequestContext ctx,
+            int frameIndex) {
         String raw = frame.raw();
         TextFormatService.ParseResult parsed;
 
@@ -392,8 +401,8 @@ public final class MotdService {
         } else if (frame.hasPlaceholders() && !config.placeholdersEnabled()) {
             parsed = textFormatService.parseToComponentDetailed(raw, config.colorFormat());
         } else if (frame.cachedComponent() != null) {
-            parsed = new TextFormatService.ParseResult(frame.cachedComponent(), frame.usedFormat(),
-                    frame.fallbackUsed());
+            parsed = new TextFormatService.ParseResult(
+                    frame.cachedComponent(), frame.usedFormat(), frame.fallbackUsed());
         } else {
             parsed = textFormatService.parseToComponentDetailed(raw, config.colorFormat());
         }
@@ -498,9 +507,11 @@ public final class MotdService {
                 10,
                 10000,
                 500,
-                new Profile.AnimationSettings(true, ConfigModel.DEFAULT_FRAME_INTERVAL_MILLIS,
-                        ConfigModel.AnimationMode.GLOBAL),
-                new Profile.PlayerCountSettings(false, false,
+                new Profile.AnimationSettings(
+                        true, ConfigModel.DEFAULT_FRAME_INTERVAL_MILLIS, ConfigModel.AnimationMode.GLOBAL),
+                new Profile.PlayerCountSettings(
+                        false,
+                        false,
                         new Profile.FakePlayersSettings(false, Profile.FakePlayersMode.STATIC, 0, 0, 0.0),
                         new Profile.JustXMoreSettings(false, 0),
                         new Profile.MaxPlayersSettings(false, 0)),
@@ -580,14 +591,13 @@ public final class MotdService {
     private CachedFrame buildCachedFrame(String raw, Profile profile, Preset preset) {
         boolean hasPlaceholders = hasPlaceholders(raw);
         if (!hasPlaceholders) {
-            TextFormatService.ParseResult parsed = textFormatService.parseToComponentDetailed(raw,
-                    config.colorFormat());
+            TextFormatService.ParseResult parsed =
+                    textFormatService.parseToComponentDetailed(raw, config.colorFormat());
             warnIfFallback(profile, preset, parsed);
             return new CachedFrame(raw, false, parsed.component(), parsed.usedFormat(), parsed.fallbackUsed());
         }
         return new CachedFrame(raw, true, null, config.colorFormat(), false);
     }
-
 
     private boolean hasPlaceholders(String input) {
         if (input == null || input.indexOf('%') < 0) {
@@ -601,12 +611,17 @@ public final class MotdService {
         return false;
     }
 
-    private PlaceholderValues buildPlaceholderValues(String presetId, String profileId,
-            PlayerCountService.PlayerCountResult counts, int frameIndex, RequestContext ctx) {
+    private PlaceholderValues buildPlaceholderValues(
+            String presetId,
+            String profileId,
+            PlayerCountService.PlayerCountResult counts,
+            int frameIndex,
+            RequestContext ctx) {
         String online = counts.hidePlayerCount() ? "???" : String.valueOf(counts.displayOnline());
         String max = counts.hidePlayerCount() ? "???" : String.valueOf(counts.displayMax());
         String version = Bukkit.getMinecraftVersion();
-        String time = LocalTime.ofInstant(Instant.ofEpochMilli(ctx.nowMs()), SYSTEM_ZONE).format(TIME_FORMAT);
+        String time = LocalTime.ofInstant(Instant.ofEpochMilli(ctx.nowMs()), SYSTEM_ZONE)
+                .format(TIME_FORMAT);
         return new PlaceholderValues(online, max, version, presetId, profileId, String.valueOf(frameIndex), time);
     }
 
@@ -645,7 +660,11 @@ public final class MotdService {
             return;
         }
 
-        StickyStateSupport.cleanupExpired(state.entries(), nowMs, ttlMs, STICKY_CLEANUP_BATCH,
+        StickyStateSupport.cleanupExpired(
+                state.entries(),
+                nowMs,
+                ttlMs,
+                STICKY_CLEANUP_BATCH,
                 (entry, threshold) -> entry != null && entry.createdAtMs() >= threshold);
 
         enforceStickyLimit(profile, state);
@@ -656,14 +675,13 @@ public final class MotdService {
         StickyStateSupport.enforceLimit(state.entries(), state.order(), maxEntries, STICKY_EVICTION_BATCH);
     }
 
-
     public Diagnostics diagnostics() {
         Map<String, Integer> stickyByProfile = new ConcurrentHashMap<>();
         for (Map.Entry<String, StickyProfileState> entry : stickyStates.entrySet()) {
             stickyByProfile.put(entry.getKey(), entry.getValue().entries().size());
         }
-        return new Diagnostics(activeProfileId, stickyByProfile, rotateCounters.size(), presetCache.size(),
-                formatWarnings.size());
+        return new Diagnostics(
+                activeProfileId, stickyByProfile, rotateCounters.size(), presetCache.size(), formatWarnings.size());
     }
 
     private String ctxString(ServerListPingEvent event) {
@@ -697,12 +715,11 @@ public final class MotdService {
         }
         String key = profile.id() + ":" + preset.id() + ":" + result.usedFormat();
         if (formatWarnings.add(key)) {
-            plugin.getLogger().warning(
-                    "Formatting failed for profile '" + profile.id() + "', preset '" + preset.id()
-                            + "' using " + result.usedFormat() + ". Using plain text fallback.");
+            plugin.getLogger()
+                    .warning("Formatting failed for profile '" + profile.id() + "', preset '" + preset.id() + "' using "
+                            + result.usedFormat() + ". Using plain text fallback.");
         }
     }
-
 
     private void runFormatSelfTest() {
         List<String> samples = List.of(
@@ -713,8 +730,8 @@ public final class MotdService {
                 "&x&0&0&D&4&3&1MOTD");
         for (String sample : samples) {
             try {
-                TextFormatService.ParseResult parsed = textFormatService.parseToComponentDetailed(sample,
-                        ColorFormat.AUTO);
+                TextFormatService.ParseResult parsed =
+                        textFormatService.parseToComponentDetailed(sample, ColorFormat.AUTO);
                 if (parsed.fallbackUsed()) {
                     plugin.getLogger().warning("Self-test fallback used for sample: " + sample);
                 }
@@ -727,35 +744,30 @@ public final class MotdService {
         }
     }
 
-    private record StickyEntry(Preset preset, long createdAtMs, int frameSeed) {
-    }
+    private record StickyEntry(Preset preset, long createdAtMs, int frameSeed) {}
 
-    private record StickyProfileState(Map<String, StickyEntry> entries, Deque<String> order,
-            AtomicInteger pingCounter) {
-    }
+    private record StickyProfileState(
+            Map<String, StickyEntry> entries, Deque<String> order, AtomicInteger pingCounter) {}
 
-    private record SelectionResult(Preset preset, StickyEntry stickyEntry, String reason) {
-    }
+    private record SelectionResult(Preset preset, StickyEntry stickyEntry, String reason) {}
 
-    public record ReloadResult(boolean success, int warnings) {
-    }
+    public record ReloadResult(boolean success, int warnings) {}
 
-    private record CachedFrame(String raw, boolean hasPlaceholders, Component cachedComponent, ColorFormat usedFormat,
-            boolean fallbackUsed) {
-    }
+    private record CachedFrame(
+            String raw,
+            boolean hasPlaceholders,
+            Component cachedComponent,
+            ColorFormat usedFormat,
+            boolean fallbackUsed) {}
 
-    private record PresetCache(CachedFrame staticFrame, List<CachedFrame> animatedFrames) {
-    }
+    private record PresetCache(CachedFrame staticFrame, List<CachedFrame> animatedFrames) {}
 
-    private record FrameSelection(CachedFrame frame, int index) {
-    }
+    private record FrameSelection(CachedFrame frame, int index) {}
 
-    private record MotdRenderResult(String raw, TextFormatService.ParseResult parsed, int frameIndex) {
-    }
+    private record MotdRenderResult(String raw, TextFormatService.ParseResult parsed, int frameIndex) {}
 
-    private record PlaceholderValues(String online, String max, String version, String preset, String profile,
-            String motdFrame, String time) {
-    }
+    private record PlaceholderValues(
+            String online, String max, String version, String preset, String profile, String motdFrame, String time) {}
 
     public record PreviewResult(
             String profileId,
@@ -767,15 +779,14 @@ public final class MotdService {
             ColorFormat configuredFormat,
             ColorFormat usedFormat,
             String iconPath,
-            PlayerCountService.PlayerCountResult playerCounts) {
-    }
+            PlayerCountService.PlayerCountResult playerCounts) {}
 
+    public record Diagnostics(
+            String activeProfile,
+            Map<String, Integer> stickyEntriesByProfile,
+            int rotateCounterProfiles,
+            int presetCacheSize,
+            int formatWarnings) {}
 
-    public record Diagnostics(String activeProfile, Map<String, Integer> stickyEntriesByProfile,
-            int rotateCounterProfiles, int presetCacheSize, int formatWarnings) {
-    }
-
-    private record RequestContext(String ip, long nowMs) {
-    }
-
+    private record RequestContext(String ip, long nowMs) {}
 }

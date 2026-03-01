@@ -15,9 +15,7 @@ public final class BetterMOTDPlugin extends JavaPlugin {
         this.motdService = new MotdService(this, profileStore);
         MotdService.ReloadResult result = this.motdService.reload();
 
-        getServer().getPluginManager().registerEvents(
-                new ServerPingListener(motdService),
-                this);
+        getServer().getPluginManager().registerEvents(new ServerPingListener(motdService), this);
 
         PluginCommand command = getCommand("bettermotd");
         if (command != null) {
@@ -28,8 +26,8 @@ public final class BetterMOTDPlugin extends JavaPlugin {
             getLogger().warning("Command 'bettermotd' is not registered in plugin.yml.");
         }
 
-        getLogger().info(
-                "BetterMOTD enabled. Reload success: " + result.success() + ", warnings: " + result.warnings());
+        getLogger()
+                .info("BetterMOTD enabled. Reload success: " + result.success() + ", warnings: " + result.warnings());
     }
 
     @Override

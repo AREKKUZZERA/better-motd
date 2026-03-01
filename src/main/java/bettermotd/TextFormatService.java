@@ -1,22 +1,20 @@
 package bettermotd;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public final class TextFormatService {
 
     private static final Pattern AMPERSAND_HEX_PATTERN = Pattern.compile("&#([0-9a-fA-F]{6})");
-    private static final Pattern MINIMESSAGE_TAG_PATTERN = Pattern.compile(
-            "<(?:/?[a-z][a-z0-9_:-]*(?::[^>]+)?|#[0-9a-fA-F]{6})>",
-            Pattern.CASE_INSENSITIVE);
+    private static final Pattern MINIMESSAGE_TAG_PATTERN =
+            Pattern.compile("<(?:/?[a-z][a-z0-9_:-]*(?::[^>]+)?|#[0-9a-fA-F]{6})>", Pattern.CASE_INSENSITIVE);
 
     private final MiniMessage miniMessage;
     private final LegacyComponentSerializer legacySectionSerializer;
@@ -97,14 +95,15 @@ public final class TextFormatService {
     private ParseResult parseSingleLine(String input, ColorFormat format) {
         ColorFormat resolved = resolveFormat(input, format);
         try {
-            Component component = switch (resolved) {
-                case MINI_MESSAGE -> miniMessage.deserialize(input);
-                case HEX_AMPERSAND -> miniMessage.deserialize(convertAmpersandHexToMiniMessage(input));
-                case JSON -> GsonComponentSerializer.gson().deserialize(input);
-                case LEGACY_SECTION -> legacySectionSerializer.deserialize(input);
-                case LEGACY_AMPERSAND -> legacyAmpersandSerializer.deserialize(input);
-                case AUTO, AUTO_STRICT -> Component.text(input);
-            };
+            Component component =
+                    switch (resolved) {
+                        case MINI_MESSAGE -> miniMessage.deserialize(input);
+                        case HEX_AMPERSAND -> miniMessage.deserialize(convertAmpersandHexToMiniMessage(input));
+                        case JSON -> GsonComponentSerializer.gson().deserialize(input);
+                        case LEGACY_SECTION -> legacySectionSerializer.deserialize(input);
+                        case LEGACY_AMPERSAND -> legacyAmpersandSerializer.deserialize(input);
+                        case AUTO, AUTO_STRICT -> Component.text(input);
+                    };
             return new ParseResult(component, resolved, false);
         } catch (Exception e) {
             return new ParseResult(Component.text(input), resolved, true);
@@ -170,6 +169,5 @@ public final class TextFormatService {
         return lines;
     }
 
-    public record ParseResult(Component component, ColorFormat usedFormat, boolean fallbackUsed) {
-    }
+    public record ParseResult(Component component, ColorFormat usedFormat, boolean fallbackUsed) {}
 }

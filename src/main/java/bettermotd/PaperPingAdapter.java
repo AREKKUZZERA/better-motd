@@ -1,12 +1,11 @@
 package bettermotd;
 
-import net.kyori.adventure.text.Component;
-import org.bukkit.event.server.ServerListPingEvent;
-
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
+import net.kyori.adventure.text.Component;
+import org.bukkit.event.server.ServerListPingEvent;
 
 public final class PaperPingAdapter {
 
@@ -118,8 +117,7 @@ public final class PaperPingAdapter {
 
     private Method findPlayerSampleMethod(Class<?> paperClass) {
         for (Method method : paperClass.getMethods()) {
-            if (!method.getName().equals("setPlayerSample"))
-                continue;
+            if (!method.getName().equals("setPlayerSample")) continue;
 
             Class<?>[] params = method.getParameterTypes();
             if (params.length == 1 && java.util.Collection.class.isAssignableFrom(params[0])) {
@@ -131,8 +129,7 @@ public final class PaperPingAdapter {
 
     private Method findSetNumPlayersMethod(Class<?> paperClass) {
         for (Method method : paperClass.getMethods()) {
-            if (!method.getName().equals("setNumPlayers"))
-                continue;
+            if (!method.getName().equals("setNumPlayers")) continue;
 
             Class<?>[] params = method.getParameterTypes();
             if (params.length == 1 && params[0] == int.class) {
@@ -143,16 +140,14 @@ public final class PaperPingAdapter {
     }
 
     private void warnMotd(String message) {
-        if (logger == null)
-            return;
+        if (logger == null) return;
         if (warnedMotd.compareAndSet(false, true)) {
             logger.warning(message);
         }
     }
 
     private void warnOnline(String message) {
-        if (logger == null)
-            return;
+        if (logger == null) return;
         if (warnedOnline.compareAndSet(false, true)) {
             logger.warning(message);
         }

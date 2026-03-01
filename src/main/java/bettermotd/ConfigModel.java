@@ -1,8 +1,5 @@
 package bettermotd;
 
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +11,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 
 public record ConfigModel(
         String activeProfile,
@@ -27,14 +26,7 @@ public record ConfigModel(
     public static final List<String> FALLBACK_MOTD_LINES = List.of("BetterMOTD", "1.21.x");
 
     public static ConfigModel empty() {
-        return new ConfigModel(
-                "default",
-                true,
-                null,
-                ColorFormat.AUTO,
-                false,
-                false,
-                Collections.emptyMap());
+        return new ConfigModel("default", true, null, ColorFormat.AUTO, false, false, Collections.emptyMap());
     }
 
     public static LoadResult load(FileConfiguration cfg, File dataFolder, Logger logger) {
@@ -68,13 +60,13 @@ public record ConfigModel(
         if (profilesSection == null) {
             legacy = true;
             warnings.incrementAndGet();
-            logger.warning(
-                    "Legacy config detected (root presets). Please migrate to the new profiles format.");
+            logger.warning("Legacy config detected (root presets). Please migrate to the new profiles format.");
 
             Profile profile = parseProfile(cfg, "default", dataFolder, logger, fallbackIconPath, warnings);
             profiles.put("default", profile);
             presetCounts.put("default", profile.presets().size());
-            if (profile.presets().size() == 1 && "default".equals(profile.presets().get(0).id())) {
+            if (profile.presets().size() == 1
+                    && "default".equals(profile.presets().get(0).id())) {
                 fallbackProfiles.add("default");
             }
         } else {
@@ -86,7 +78,8 @@ public record ConfigModel(
                 Profile profile = parseProfile(section, profileId, dataFolder, logger, fallbackIconPath, warnings);
                 profiles.put(profileId, profile);
                 presetCounts.put(profileId, profile.presets().size());
-                if (profile.presets().size() == 1 && "default".equals(profile.presets().get(0).id())) {
+                if (profile.presets().size() == 1
+                        && "default".equals(profile.presets().get(0).id())) {
                     fallbackProfiles.add(profileId);
                 }
             }
@@ -120,28 +113,55 @@ public record ConfigModel(
         return new LoadResult(model, warnings.get(), legacy, presetCounts, fallbackProfiles);
     }
 
-    private static Profile parseProfile(ConfigurationSection section, String profileId, File dataFolder, Logger logger,
-            String fallbackIconPath, AtomicInteger warnings) {
+    private static Profile parseProfile(
+            ConfigurationSection section,
+            String profileId,
+            File dataFolder,
+            Logger logger,
+            String fallbackIconPath,
+            AtomicInteger warnings) {
         String selectionModeRaw = section.getString("selectionMode", SelectionMode.STICKY_PER_IP.name());
         SelectionMode selectionMode = SelectionMode.from(selectionModeRaw);
         if (selectionMode == null) {
-            warn(logger, warnings,
+            warn(
+                    logger,
+                    warnings,
                     "Unknown selectionMode '" + selectionModeRaw + "' in profile '" + profileId
                             + "'. Using STICKY_PER_IP.");
             selectionMode = SelectionMode.STICKY_PER_IP;
         }
 
-        int stickyTtlSeconds = clampInt(section.getInt("stickyTtlSeconds", 10), 1, Integer.MAX_VALUE,
-                "stickyTtlSeconds", profileId, logger, warnings);
-        int stickyMaxEntries = clampInt(section.getInt("stickyMaxEntriesPerProfile", 10000), 1, Integer.MAX_VALUE,
-                "stickyMaxEntriesPerProfile", profileId, logger, warnings);
-        int stickyCleanupEvery = clampInt(section.getInt("stickyCleanupEveryNPings", 500), 1, Integer.MAX_VALUE,
-                "stickyCleanupEveryNPings", profileId, logger, warnings);
+        int stickyTtlSeconds = clampInt(
+                section.getInt("stickyTtlSeconds", 10),
+                1,
+                Integer.MAX_VALUE,
+                "stickyTtlSeconds",
+                profileId,
+                logger,
+                warnings);
+        int stickyMaxEntries = clampInt(
+                section.getInt("stickyMaxEntriesPerProfile", 10000),
+                1,
+                Integer.MAX_VALUE,
+                "stickyMaxEntriesPerProfile",
+                profileId,
+                logger,
+                warnings);
+        int stickyCleanupEvery = clampInt(
+                section.getInt("stickyCleanupEveryNPings", 500),
+                1,
+                Integer.MAX_VALUE,
+                "stickyCleanupEveryNPings",
+                profileId,
+                logger,
+                warnings);
 
         boolean animEnabled = section.getBoolean("animation.enabled", true);
         long interval = section.getLong("animation.frameIntervalMillis", DEFAULT_FRAME_INTERVAL_MILLIS);
         if (interval < 100L) {
-            warn(logger, warnings,
+            warn(
+                    logger,
+                    warnings,
                     "animation.frameIntervalMillis in profile '" + profileId + "' must be >= 100. Using 100.");
             interval = 100L;
         }
@@ -149,18 +169,20 @@ public record ConfigModel(
         String animModeRaw = section.getString("animation.motdAnimationMode", AnimationMode.GLOBAL.name());
         AnimationMode animMode = AnimationMode.from(animModeRaw);
         if (animMode == null) {
-            warn(logger, warnings,
+            warn(
+                    logger,
+                    warnings,
                     "Unknown animation.motdAnimationMode '" + animModeRaw + "' in profile '" + profileId
                             + "'. Using GLOBAL.");
             animMode = AnimationMode.GLOBAL;
         }
 
         Profile.AnimationSettings animation = new Profile.AnimationSettings(animEnabled, interval, animMode);
-        Profile.PlayerCountSettings playerCount = parsePlayerCount(section.getConfigurationSection("playerCount"),
-                profileId, logger, warnings);
+        Profile.PlayerCountSettings playerCount =
+                parsePlayerCount(section.getConfigurationSection("playerCount"), profileId, logger, warnings);
 
-        List<Preset> presets = parsePresetList(section.getMapList("presets"), dataFolder, logger, fallbackIconPath,
-                profileId, warnings);
+        List<Preset> presets = parsePresetList(
+                section.getMapList("presets"), dataFolder, logger, fallbackIconPath, profileId, warnings);
         if (presets.isEmpty()) {
             warn(logger, warnings, "Profile '" + profileId + "' has no valid presets. Using fallback preset.");
             presets = List.of(Preset.fallback(fallbackIconPath));
@@ -177,8 +199,8 @@ public record ConfigModel(
                 List.copyOf(presets));
     }
 
-    private static Profile.PlayerCountSettings parsePlayerCount(ConfigurationSection section, String profileId,
-            Logger logger, AtomicInteger warnings) {
+    private static Profile.PlayerCountSettings parsePlayerCount(
+            ConfigurationSection section, String profileId, Logger logger, AtomicInteger warnings) {
         if (section == null) {
             return defaultPlayerCount();
         }
@@ -186,36 +208,50 @@ public record ConfigModel(
         boolean disableHover = section.getBoolean("disableHover", false);
         boolean hidePlayerCount = section.getBoolean("hidePlayerCount", false);
 
-        Profile.FakePlayersSettings fakePlayers = parseFakePlayers(
-                section.getConfigurationSection("fakePlayers"), profileId, logger, warnings);
+        Profile.FakePlayersSettings fakePlayers =
+                parseFakePlayers(section.getConfigurationSection("fakePlayers"), profileId, logger, warnings);
 
         ConfigurationSection justX = section.getConfigurationSection("justXMore");
         boolean justXEnabled = justX != null && justX.getBoolean("enabled", false);
-        int justXValue = clampInt(justX != null ? justX.getInt("x", 0) : 0, 0, Integer.MAX_VALUE, "justXMore.x",
-                profileId, logger, warnings);
+        int justXValue = clampInt(
+                justX != null ? justX.getInt("x", 0) : 0,
+                0,
+                Integer.MAX_VALUE,
+                "justXMore.x",
+                profileId,
+                logger,
+                warnings);
 
         ConfigurationSection maxPlayers = section.getConfigurationSection("maxPlayers");
         boolean maxPlayersEnabled = maxPlayers != null && maxPlayers.getBoolean("enabled", false);
-        int maxPlayersValue = clampInt(maxPlayers != null ? maxPlayers.getInt("value", 0) : 0, 1,
-                Integer.MAX_VALUE, "maxPlayers.value", profileId, logger, warnings);
+        int maxPlayersValue = clampInt(
+                maxPlayers != null ? maxPlayers.getInt("value", 0) : 0,
+                1,
+                Integer.MAX_VALUE,
+                "maxPlayers.value",
+                profileId,
+                logger,
+                warnings);
 
         Profile.JustXMoreSettings justXMore = new Profile.JustXMoreSettings(justXEnabled, justXValue);
-        Profile.MaxPlayersSettings maxPlayersSettings = new Profile.MaxPlayersSettings(maxPlayersEnabled,
-                maxPlayersValue);
+        Profile.MaxPlayersSettings maxPlayersSettings =
+                new Profile.MaxPlayersSettings(maxPlayersEnabled, maxPlayersValue);
 
-        return new Profile.PlayerCountSettings(disableHover, hidePlayerCount, fakePlayers, justXMore,
-                maxPlayersSettings);
+        return new Profile.PlayerCountSettings(
+                disableHover, hidePlayerCount, fakePlayers, justXMore, maxPlayersSettings);
     }
 
     private static Profile.PlayerCountSettings defaultPlayerCount() {
-        return new Profile.PlayerCountSettings(false, false,
+        return new Profile.PlayerCountSettings(
+                false,
+                false,
                 new Profile.FakePlayersSettings(false, Profile.FakePlayersMode.STATIC, 0, 0, 0.0),
                 new Profile.JustXMoreSettings(false, 0),
                 new Profile.MaxPlayersSettings(false, 0));
     }
 
-    private static Profile.FakePlayersSettings parseFakePlayers(ConfigurationSection section, String profileId,
-            Logger logger, AtomicInteger warnings) {
+    private static Profile.FakePlayersSettings parseFakePlayers(
+            ConfigurationSection section, String profileId, Logger logger, AtomicInteger warnings) {
         if (section == null) {
             return new Profile.FakePlayersSettings(false, Profile.FakePlayersMode.STATIC, 0, 0, 0.0);
         }
@@ -224,7 +260,9 @@ public record ConfigModel(
         String modeRaw = section.getString("mode", "static");
         Profile.FakePlayersMode mode = parseFakePlayersMode(modeRaw);
         if (mode == null) {
-            warn(logger, warnings,
+            warn(
+                    logger,
+                    warnings,
                     "Unknown fakePlayers.mode '" + modeRaw + "' in profile '" + profileId + "'. Using static.");
             mode = Profile.FakePlayersMode.STATIC;
         }
@@ -237,8 +275,7 @@ public record ConfigModel(
         if (mode == Profile.FakePlayersMode.PERCENT) {
             percent = parsePercent(valueRaw);
             if (percent < 0) {
-                warn(logger, warnings,
-                        "fakePlayers.value in profile '" + profileId + "' must be >= 0. Using 0.");
+                warn(logger, warnings, "fakePlayers.value in profile '" + profileId + "' must be >= 0. Using 0.");
                 percent = 0.0;
             }
         } else if (mode == Profile.FakePlayersMode.RANDOM) {
@@ -266,15 +303,15 @@ public record ConfigModel(
 
     private static int[] parseRange(String raw) {
         if (raw == null) {
-            return new int[] { 0, 0 };
+            return new int[] {0, 0};
         }
         String cleaned = raw.trim();
         String[] parts = cleaned.split("[:\\-]");
         if (parts.length == 2) {
-            return new int[] { parseInt(parts[0]), parseInt(parts[1]) };
+            return new int[] {parseInt(parts[0]), parseInt(parts[1])};
         }
         int value = parseInt(cleaned);
-        return new int[] { value, value };
+        return new int[] {value, value};
     }
 
     private static double parsePercent(String raw) {
@@ -305,8 +342,13 @@ public record ConfigModel(
         return "icons/default.png";
     }
 
-    private static List<Preset> parsePresetList(List<?> list, File dataFolder, Logger logger, String fallbackIconPath,
-            String profileId, AtomicInteger warnings) {
+    private static List<Preset> parsePresetList(
+            List<?> list,
+            File dataFolder,
+            Logger logger,
+            String fallbackIconPath,
+            String profileId,
+            AtomicInteger warnings) {
         if (list == null || list.isEmpty()) {
             return Collections.emptyList();
         }
@@ -326,19 +368,19 @@ public record ConfigModel(
 
             int weight = intv(map.get("weight"), 1);
             if (weight < 1) {
-                warn(logger, warnings,
-                        "Preset '" + id + "' in profile '" + profileId + "' has weight < 1. Using 1.");
+                warn(logger, warnings, "Preset '" + id + "' in profile '" + profileId + "' has weight < 1. Using 1.");
                 weight = 1;
             }
 
             String icon = resolveIcon(map.get("icon"), dataFolder, logger, fallbackIconPath, id, profileId, warnings);
 
             List<String> motd = normalizeMotdLines(strList(map.get("motd")), profileId, id, logger, warnings);
-            List<String> motdFrames = normalizeFrames(strList(map.get("motdFrames")), profileId, id, logger,
-                    warnings);
+            List<String> motdFrames = normalizeFrames(strList(map.get("motdFrames")), profileId, id, logger, warnings);
 
             if (motd.isEmpty() && motdFrames.isEmpty()) {
-                warn(logger, warnings,
+                warn(
+                        logger,
+                        warnings,
                         "Preset '" + id + "' in profile '" + profileId + "' has no motd or motdFrames. Skipping.");
                 continue;
             }
@@ -349,8 +391,8 @@ public record ConfigModel(
         return presets;
     }
 
-    private static List<String> normalizeMotdLines(List<String> lines, String profileId, String presetId,
-            Logger logger, AtomicInteger warnings) {
+    private static List<String> normalizeMotdLines(
+            List<String> lines, String profileId, String presetId, Logger logger, AtomicInteger warnings) {
         if (lines == null || lines.isEmpty()) {
             return Collections.emptyList();
         }
@@ -359,7 +401,9 @@ public record ConfigModel(
             raw = String.valueOf(lines.get(0));
         } else {
             if (lines.size() > 2) {
-                warn(logger, warnings,
+                warn(
+                        logger,
+                        warnings,
                         "Preset '" + presetId + "' in profile '" + profileId
                                 + "' motd has more than 2 lines. Using first two.");
             }
@@ -373,8 +417,8 @@ public record ConfigModel(
         return out;
     }
 
-    private static List<String> normalizeFrames(List<String> frames, String profileId, String presetId,
-            Logger logger, AtomicInteger warnings) {
+    private static List<String> normalizeFrames(
+            List<String> frames, String profileId, String presetId, Logger logger, AtomicInteger warnings) {
         if (frames == null || frames.isEmpty()) {
             return Collections.emptyList();
         }
@@ -388,8 +432,8 @@ public record ConfigModel(
         return out;
     }
 
-    private static String normalizeFrameString(String raw, String profileId, String presetId, int frameIndex,
-            Logger logger, AtomicInteger warnings) {
+    private static String normalizeFrameString(
+            String raw, String profileId, String presetId, int frameIndex, Logger logger, AtomicInteger warnings) {
         String safe = raw == null ? "" : raw;
         String[] parts = safe.split("\n", -1);
         if (parts.length <= 1) {
@@ -397,7 +441,9 @@ public record ConfigModel(
         }
         if (parts.length > 2) {
             String location = frameIndex >= 0 ? "frame " + frameIndex : "motd";
-            warn(logger, warnings,
+            warn(
+                    logger,
+                    warnings,
                     "Preset '" + presetId + "' in profile '" + profileId + "' " + location
                             + " has more than 2 lines. Using first two.");
         }
@@ -405,24 +451,41 @@ public record ConfigModel(
     }
 
     private static Profile fallbackProfile(String id, String fallbackIconPath) {
-        Profile.AnimationSettings animation = new Profile.AnimationSettings(true, DEFAULT_FRAME_INTERVAL_MILLIS,
-                AnimationMode.GLOBAL);
+        Profile.AnimationSettings animation =
+                new Profile.AnimationSettings(true, DEFAULT_FRAME_INTERVAL_MILLIS, AnimationMode.GLOBAL);
         Profile.PlayerCountSettings playerCount = defaultPlayerCount();
-        return new Profile(id, SelectionMode.STICKY_PER_IP, 10, 10000, 500, animation, playerCount,
+        return new Profile(
+                id,
+                SelectionMode.STICKY_PER_IP,
+                10,
+                10000,
+                500,
+                animation,
+                playerCount,
                 List.of(Preset.fallback(fallbackIconPath)));
     }
 
-    private static String resolveIcon(Object raw, File dataFolder, Logger logger, String fallbackIconPath,
-            String presetId, String profileId, AtomicInteger warnings) {
+    private static String resolveIcon(
+            Object raw,
+            File dataFolder,
+            Logger logger,
+            String fallbackIconPath,
+            String presetId,
+            String profileId,
+            AtomicInteger warnings) {
         String icon = str(raw, null);
         if (icon == null || icon.isBlank()) {
             if (fallbackIconPath != null) {
-                warn(logger, warnings,
+                warn(
+                        logger,
+                        warnings,
                         "Preset '" + presetId + "' in profile '" + profileId + "' has no icon. Using "
                                 + fallbackIconPath + ".");
                 return fallbackIconPath;
             }
-            warn(logger, warnings,
+            warn(
+                    logger,
+                    warnings,
                     "Preset '" + presetId + "' in profile '" + profileId + "' has no icon and no default icon.");
             return null;
         }
@@ -435,14 +498,18 @@ public record ConfigModel(
         File iconFile = new File(dataFolder, normalized);
         if (!iconFile.isFile()) {
             if (fallbackIconPath != null) {
-                warn(logger, warnings,
-                        "Preset '" + presetId + "' in profile '" + profileId + "' icon not found: "
-                                + iconFile.getPath() + ". Using " + fallbackIconPath + ".");
+                warn(
+                        logger,
+                        warnings,
+                        "Preset '" + presetId + "' in profile '" + profileId + "' icon not found: " + iconFile.getPath()
+                                + ". Using " + fallbackIconPath + ".");
                 return fallbackIconPath;
             }
-            warn(logger, warnings,
-                    "Preset '" + presetId + "' in profile '" + profileId + "' icon not found: "
-                            + iconFile.getPath() + ".");
+            warn(
+                    logger,
+                    warnings,
+                    "Preset '" + presetId + "' in profile '" + profileId + "' icon not found: " + iconFile.getPath()
+                            + ".");
             return null;
         }
 
@@ -514,10 +581,12 @@ public record ConfigModel(
         }
     }
 
-    private static int clampInt(int value, int min, int max, String field, String profileId, Logger logger,
-            AtomicInteger warnings) {
+    private static int clampInt(
+            int value, int min, int max, String field, String profileId, Logger logger, AtomicInteger warnings) {
         if (value < min) {
-            warn(logger, warnings,
+            warn(
+                    logger,
+                    warnings,
                     field + " in profile '" + profileId + "' must be >= " + min + ". Using " + min + ".");
             return min;
         }
@@ -527,9 +596,12 @@ public record ConfigModel(
         return value;
     }
 
-    public record LoadResult(ConfigModel config, int warnings, boolean legacy, Map<String, Integer> presetCounts,
-            Set<String> fallbackProfiles) {
-    }
+    public record LoadResult(
+            ConfigModel config,
+            int warnings,
+            boolean legacy,
+            Map<String, Integer> presetCounts,
+            Set<String> fallbackProfiles) {}
 
     public enum SelectionMode {
         RANDOM,

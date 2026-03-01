@@ -4,7 +4,6 @@ import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
-
 import org.bukkit.event.server.ServerListPingEvent;
 
 public final class PlayerCountService {
@@ -29,7 +28,8 @@ public final class PlayerCountService {
 
         int displayMax = safeMax;
         if (settings.justXMore().enabled()) {
-            displayMax = Math.max(0, displayOnline + Math.max(0, settings.justXMore().x()));
+            displayMax =
+                    Math.max(0, displayOnline + Math.max(0, settings.justXMore().x()));
         }
         if (settings.maxPlayers().enabled()) {
             displayMax = Math.max(1, settings.maxPlayers().value());
@@ -46,8 +46,7 @@ public final class PlayerCountService {
     }
 
     public void apply(ServerListPingEvent event, PlayerCountResult result, PaperPingAdapter paper) {
-        if (event == null || result == null)
-            return;
+        if (event == null || result == null) return;
 
         boolean onlineApplied = false;
         if (paper != null) {
@@ -70,32 +69,33 @@ public final class PlayerCountService {
             }
 
             if (result.fakeDelta() != 0) {
-                warnOnce(warnedOnlineUnsupported,
+                warnOnce(
+                        warnedOnlineUnsupported,
                         "fakePlayers is enabled, but this server does not support setting online player count via Bukkit. "
-                                +
-                                "Install/use Paper to enable fake online count.");
+                                + "Install/use Paper to enable fake online count.");
             }
         }
 
         if (result.hidePlayerCount()) {
             if (!(paper != null && paper.applyHidePlayers(event, true))) {
-                warnOnce(warnedHidePlayers,
+                warnOnce(
+                        warnedHidePlayers,
                         "hidePlayerCount is enabled but this server does not support hiding player counts.");
             }
         }
 
         if (result.disableHover()) {
             if (!(paper != null && paper.applyDisableHover(event))) {
-                warnOnce(warnedHover,
+                warnOnce(
+                        warnedHover,
                         "disableHover is enabled but this server does not support disabling hover samples.");
             }
         }
     }
 
-    private int computeFakePlayers(Profile profile, Profile.FakePlayersSettings fakePlayers, String ip, int online,
-            long nowMs) {
-        if (fakePlayers == null || !fakePlayers.enabled())
-            return 0;
+    private int computeFakePlayers(
+            Profile profile, Profile.FakePlayersSettings fakePlayers, String ip, int online, long nowMs) {
+        if (fakePlayers == null || !fakePlayers.enabled()) return 0;
 
         return switch (fakePlayers.mode()) {
             case STATIC -> Math.max(0, fakePlayers.min());
@@ -107,8 +107,7 @@ public final class PlayerCountService {
     private int randomBetween(int min, int max, ConfigModel.SelectionMode selectionMode, String ip, long nowMs) {
         int low = Math.max(0, Math.min(min, max));
         int high = Math.max(low, Math.max(min, max));
-        if (low == high)
-            return low;
+        if (low == high) return low;
 
         if (selectionMode == ConfigModel.SelectionMode.STICKY_PER_IP && ip != null) {
             long bucket = nowMs / 60000L; // 1-minute buckets for stability
@@ -121,16 +120,14 @@ public final class PlayerCountService {
     }
 
     private void warnOnce(AtomicBoolean flag, String message) {
-        if (logger == null)
-            return;
+        if (logger == null) return;
         if (flag.compareAndSet(false, true)) {
             logger.warning(message);
         }
     }
 
     private void warn(String message) {
-        if (logger != null)
-            logger.warning(message);
+        if (logger != null) logger.warning(message);
     }
 
     public record PlayerCountResult(
@@ -140,6 +137,5 @@ public final class PlayerCountService {
             int displayMax,
             int fakeDelta,
             boolean hidePlayerCount,
-            boolean disableHover) {
-    }
+            boolean disableHover) {}
 }

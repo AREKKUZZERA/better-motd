@@ -8,11 +8,10 @@ import java.util.function.BiPredicate;
 
 final class StickyStateSupport {
 
-    private StickyStateSupport() {
-    }
+    private StickyStateSupport() {}
 
-    static <K, V> void cleanupExpired(Map<K, V> entries, long nowMs, long ttlMs, int batchLimit,
-            BiPredicate<V, Long> isValid) {
+    static <K, V> void cleanupExpired(
+            Map<K, V> entries, long nowMs, long ttlMs, int batchLimit, BiPredicate<V, Long> isValid) {
         int checked = 0;
         for (Map.Entry<K, V> entry : entries.entrySet()) {
             if (checked >= batchLimit) {

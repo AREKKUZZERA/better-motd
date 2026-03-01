@@ -1,6 +1,7 @@
 package bettermotd;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,9 +9,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 class StickyStateSupportTest {
 
@@ -20,8 +19,7 @@ class StickyStateSupportTest {
         entries.put("fresh", 1000L);
         entries.put("stale", 100L);
 
-        StickyStateSupport.cleanupExpired(entries, 2000L, 1000L, 100,
-                (createdAt, threshold) -> createdAt >= threshold);
+        StickyStateSupport.cleanupExpired(entries, 2000L, 1000L, 100, (createdAt, threshold) -> createdAt >= threshold);
 
         assertTrue(entries.containsKey("fresh"));
         assertFalse(entries.containsKey("stale"));
@@ -45,8 +43,8 @@ class StickyStateSupportTest {
                 String key = "new-" + idx;
                 entries.put(key, 10_000L);
                 order.addLast(key);
-                StickyStateSupport.cleanupExpired(entries, 10_000L, 1_000L, 200,
-                        (createdAt, threshold) -> createdAt >= threshold);
+                StickyStateSupport.cleanupExpired(
+                        entries, 10_000L, 1_000L, 200, (createdAt, threshold) -> createdAt >= threshold);
                 StickyStateSupport.enforceLimit(entries, order, 200, 200);
             });
         }

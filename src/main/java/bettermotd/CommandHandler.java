@@ -1,18 +1,17 @@
 package bettermotd;
 
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
-
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public final class CommandHandler implements CommandExecutor, TabCompleter {
 
@@ -113,9 +112,9 @@ public final class CommandHandler implements CommandExecutor, TabCompleter {
         PlayerCountService.PlayerCountResult counts = result.playerCounts();
         String online = counts.hidePlayerCount() ? "???" : String.valueOf(counts.displayOnline());
         String max = counts.hidePlayerCount() ? "???" : String.valueOf(counts.displayMax());
-        sender.sendMessage("- player counts: " + online + "/" + max +
-                " (base " + counts.baseOnline() + "/" + counts.baseMax() +
-                ", fake +" + counts.fakeDelta() + ")");
+        sender.sendMessage("- player counts: " + online + "/" + max + " (base "
+                + counts.baseOnline() + "/" + counts.baseMax() + ", fake +"
+                + counts.fakeDelta() + ")");
         if (counts.hidePlayerCount()) {
             sender.sendMessage("- player counts are hidden (??? in server list)");
         }
@@ -123,8 +122,7 @@ public final class CommandHandler implements CommandExecutor, TabCompleter {
             sender.sendMessage("- player hover list disabled (Paper only)");
         }
 
-        sender.sendMessage("- format: configured=" + result.configuredFormat()
-                + ", detected=" + result.usedFormat());
+        sender.sendMessage("- format: configured=" + result.configuredFormat() + ", detected=" + result.usedFormat());
         sender.sendMessage("- motd:");
         for (String line : result.motdLines()) {
             sender.sendMessage("  " + line);
@@ -138,7 +136,6 @@ public final class CommandHandler implements CommandExecutor, TabCompleter {
 
         return true;
     }
-
 
     private boolean handleDiagnostics(CommandSender sender) {
         MotdService.Diagnostics diagnostics = motdService.diagnostics();
